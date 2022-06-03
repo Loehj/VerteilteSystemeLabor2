@@ -1,5 +1,7 @@
 import org.apache.kafka.clients.consumer.*;
 
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -35,6 +37,7 @@ public class WeatherConsumerGraphite {
     }
 
     public void sendWeather() throws Exception {
+
         Graphite graphite = new Graphite("10.50.15.52", 2003);
 
         graphite.connect();
@@ -48,14 +51,15 @@ public class WeatherConsumerGraphite {
                     }
                     records.forEach(record -> {
                         try {
-                            graphite.send("inf19b_group8_." + record.key(), record.value() + "" + record.offset() + "" + record.partition(), record.timestamp());
+                            System.out.println(record.value() + "" + record.offset() + "" + record.partition());
+                            graphite.send("inf19b_group8", record.value() + "" + record.offset() + "" + record.partition(), record.timestamp());
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     });
                 }
             } catch (Exception e){
-                throw new Exception("help" + e);
+                throw new Exception(e);
             }
         }
         graphite.close();
