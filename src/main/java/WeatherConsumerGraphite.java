@@ -1,10 +1,25 @@
+import org.apache.kafka.clients.consumer.*;
+
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.Properties;
+
+import java.io.IOException;
+
+import com.codahale.metrics.graphite.Graphite;
+
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+
 public class WeatherConsumerGraphite {
     private final static String TOPIC = "weather";
     private final static String SERVER = "10.50.15.52:9092";
     private final static String CLIENT_ID = "Group8";
     private static Consumer<Long, String> consumer;
 
-    public WeatherConsumer() {
+    public WeatherConsumerGraphite() {
 
         Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,SERVER);
@@ -19,7 +34,7 @@ public class WeatherConsumerGraphite {
 
     }
 
-    public void sendWeather(){
+    public void sendWeather() throws Exception {
         Graphite graphite = new Graphite("10.50.15.52", 2003);
 
         graphite.connect();
@@ -27,20 +42,20 @@ public class WeatherConsumerGraphite {
             try {
                 consumer.subscribe(Collections.singletonList(TOPIC));
                 while (true) {
-                    val records = consumer.poll(Duration.of(60, ChronoUnit.SECONDS));
+                    ConsumerRecords<Long, String> records = consumer.poll(Duration.of(60, ChronoUnit.SECONDS));
                     if (records.isEmpty()) {
                         Thread.sleep(10_000);
                     }
-                    records.forEach(rec -> {
+                    records.forEach(record -> {
                         try {
-                            //graphite.send("inf19b_group8_." + rec.value().getCity().toLowerCase() + "_max", rec.value().getTempMax() + "", rec.timestamp() / 1000);
-                            //graphite.send("inf19b_group8_." + rec.value().getCity().toLowerCase() + "_min", rec.value().getTempMin() + "", rec.timestamp() / 1000);
-                            graphite.send("inf19b_group8_." + rec.value().getCity().toLowerCase() + "_currentTemp_", rec.value().getTempCurrent() + "", rec.timestamp() / 1000);
+                            graphite.send("inf19b_group8_." + record.key(), record.value() + "" + record.offset() + "" + record.partition(), record.timestamp());
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     });
                 }
+            } catch (Exception e){
+                throw new Exception("help" + e);
             }
         }
         graphite.close();
