@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 
 import java.io.IOException;
@@ -42,6 +43,7 @@ public class WeatherConsumerGraphite {
 
         graphite.connect();
         if (graphite.isConnected()) {
+            graphite.flush();
             try {
                 consumer.subscribe(Collections.singletonList(TOPIC));
                 while (true) {
@@ -51,8 +53,8 @@ public class WeatherConsumerGraphite {
                     }
                     records.forEach(record -> {
                         try {
-                            System.out.println(record.value() + "" + record.offset() + "" + record.partition());
-                            graphite.send("inf19b_group8", record.value() + "" + record.offset() + "" + record.partition(), record.timestamp());
+                            System.out.println("inf19b.group8.weather." + getCity(record.value()).toLowerCase() + ","+ getTemp(record.value()) + ""+ "," + record.timestamp()/1000);
+                            graphite.send("inf19b.group8.weather." + getCity(record.value()).toLowerCase(), getTemp(record.value()) + "", record.timestamp()/1000);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -63,6 +65,14 @@ public class WeatherConsumerGraphite {
             }
         }
         graphite.close();
+    }
+
+    public String getCity(String value){
+        return value.split(",")[5].split("\"")[3];
+    }
+
+    public String getTemp(String value){
+        return value.split("\"")[2].substring(1, value.split("\"")[2].length()-2);
     }
 
 }

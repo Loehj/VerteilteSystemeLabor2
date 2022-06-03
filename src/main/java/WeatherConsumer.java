@@ -14,7 +14,7 @@ public class WeatherConsumer extends Thread {
 
     public WeatherConsumer() {
 
-            Properties props = new Properties();
+        Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,SERVER);
         props.put(ConsumerConfig.GROUP_ID_CONFIG,CLIENT_ID);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG,"true");
