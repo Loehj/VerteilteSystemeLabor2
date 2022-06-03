@@ -10,7 +10,7 @@ public class WeatherConsumer extends Thread {
     private final static String TOPIC = "weather";
     private final static String SERVER = "10.50.15.52:9092";
     private final static String CLIENT_ID = "Group 8";
-    private static Consumer<Long, String> _consumer;
+    private static Consumer<Long, String> consumer;
 
     public WeatherConsumer() {
 
@@ -23,11 +23,9 @@ public class WeatherConsumer extends Thread {
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,"org.apache.kafka.common.serialization.IntegerDeserializer");
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,"org.apache.kafka.common.serialization.StringDeserializer");
 
-        final Consumer<Long, String> consumer = new KafkaConsumer<>(props);
+        consumer = new KafkaConsumer<>(props);
 
         consumer.subscribe(Collections.singleton(TOPIC));
-
-        _consumer = consumer;
     }
 
     public static void runConsumer() throws InterruptedException {
@@ -36,7 +34,7 @@ public class WeatherConsumer extends Thread {
 
         while (true) {
             final ConsumerRecords<Long, String> consumerRecords =
-                    _consumer.poll(1000);
+                    consumer.poll(1000);
 
             if (consumerRecords.count()==0) {
                 noRecordsCount++;
@@ -50,13 +48,13 @@ public class WeatherConsumer extends Thread {
                         record.partition(), record.offset());
             });
 
-            _consumer.commitAsync();
+            consumer.commitAsync();
         }
-        _consumer.close();
+        consumer.close();
         System.out.println("DONE");
     }
 
     public Consumer<Long, String> getConsumer() {
-        return _consumer;
+        return consumer;
     }
 }
