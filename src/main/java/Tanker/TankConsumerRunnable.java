@@ -2,18 +2,21 @@ package Tanker;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.errors.WakeupException;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class TankConsumerRunner implements Runnable{
+public class TankConsumerRunnable implements Runnable{
 
     private final TankConsumer consumer;
+    private final TankerStat stats;
+    private final TankConsumerStorage storage;
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
-    public TankConsumerRunner(int i){
+    public TankConsumerRunnable(int i){
         consumer = new TankConsumer(i);
+        storage = new TankConsumerStorage(i);
+        stats = new TankerStat(storage);
     }
 
     @Override
@@ -22,8 +25,13 @@ public class TankConsumerRunner implements Runnable{
             consumer.subscribe();
             while (!closed.get()) {
                 ConsumerRecords<String, String> records = consumer.poll();
+//                int i = 0;
                 for(ConsumerRecord<String, String> record : records){
-                    System.out.println(record.value());
+//                    System.out.println(record.value());
+                    storage.parseData(record.value());
+//                    if(i % 1000 == 0){
+//                    }
+//                    i++;
                 }
             }
         } catch (WakeupException e) {
@@ -37,5 +45,9 @@ public class TankConsumerRunner implements Runnable{
     public void shutdown(){
         closed.set(true);
         consumer.wakeup();
+    }
+
+    public void print(){
+        stats.printStats();
     }
 }

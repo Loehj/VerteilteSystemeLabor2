@@ -8,6 +8,7 @@ import org.apache.kafka.common.TopicPartition;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -31,8 +32,12 @@ public class TankConsumer {
     }
 
     public void subscribe(){
-        //consumer.assign(Arrays.asList(new TopicPartition(TOPIC, partition)));
-        consumer.subscribe(Arrays.asList(TOPIC));
+//        consumer.assign(Arrays.asList(new TopicPartition(TOPIC, partition)));
+//        consumer.subscribe(Arrays.asList(TOPIC));
+
+        final var topicPartitionList = Collections.singletonList(new TopicPartition(TOPIC, partition));
+        consumer.assign(topicPartitionList);
+        consumer.seekToBeginning(topicPartitionList);
     }
 
     public ConsumerRecords<String, String> poll(){
